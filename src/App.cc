@@ -5,7 +5,7 @@ namespace tf_mapper
 {
     App::App()
     {
-        this->_database = DatabaseFactory::createDatabase("mysql2");
+        this->_database = DatabaseFactory::createDatabase("mysql");
     }
 
     App::~App()
