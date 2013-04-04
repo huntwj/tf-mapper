@@ -1,6 +1,6 @@
 all: tf-mapper
 
-tf-mapper: main.cc MysqlDatabase.cc DatabaseFactory.cc App.cc
+tf-mapper: main.cc App.cc Configuration.cc Database.cc DatabaseFactory.cc LogFileParser.cc Map.cc Mapper.cc MysqlDatabase.cc 
 	g++ -g -O0 -o $@ $+
 
 clean:
