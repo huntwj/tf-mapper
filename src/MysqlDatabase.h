@@ -9,6 +9,7 @@ namespace tf_mapper {
     {
         public:
             MysqlDatabase();
+            virtual ~MysqlDatabase();
     };
 
 }

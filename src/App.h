@@ -1,7 +1,8 @@
 #ifndef TF_MAPPER_APP_H_
 #define TF_MAPPER_APP_H_
 
-#include "Database.h"
+#include "Configuration.h"
+#include "Mapper.h"
 
 namespace tf_mapper
 {
@@ -12,7 +13,8 @@ namespace tf_mapper
             ~App();
 
         private:
-            Database *_database;
+            Mapper *_mapper;
+            Configuration *_config;
     };
 }
 #endif

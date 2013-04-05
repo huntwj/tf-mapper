@@ -10,7 +10,7 @@ namespace tf_mapper
     class Mapper
     {
         public:
-            Mapper(Configuration &p_config);
+            Mapper(Configuration *p_config);
             ~Mapper();
 
         private:

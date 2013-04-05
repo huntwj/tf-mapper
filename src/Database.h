@@ -5,6 +5,8 @@ namespace tf_mapper {
 
     class Database
     {
+        public:
+            virtual ~Database();
     };
 
 }
