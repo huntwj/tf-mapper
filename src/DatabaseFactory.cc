@@ -10,14 +10,18 @@ namespace tf_mapper
     DatabaseFactory::DatabaseFactory(Configuration p_config)
     {
         DLOG(INFO) << "DatabaseFactory constructor called.";
+
         this->_config = p_config;
+
         DLOG(INFO) << "DatabaseFactory constructor done.";
     }
 
-    Database *DatabaseFactory::createDatabase(std::string p_type)
+    Database *DatabaseFactory::createDatabase()
     {
         DLOG(INFO) << "DatabaseFactory createDatabase called.";
+
         MysqlDatabase *md = new MysqlDatabase();
+
         DLOG(INFO) << "DatabaseFactory createDatabase done.";
         return md;
     }

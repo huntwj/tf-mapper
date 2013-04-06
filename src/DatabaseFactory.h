@@ -1,8 +1,6 @@
 #ifndef TF_MAPPER_DATABASEFACTORY_H_
 #define TF_MAPPER_DATABASEFACTORY_H_
 
-#include <string>
-
 #include "Configuration.h"
 #include "Database.h"
 
@@ -28,7 +26,7 @@ namespace tf_mapper {
              *
              * The caller is responsible for deleting the object created.
              */
-            Database *createDatabase(std::string p_type);
+            Database *createDatabase();
 
         private:
             Configuration _config;
