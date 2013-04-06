@@ -1,12 +1,14 @@
 #include <iostream>
 
+#include <glog/logging.h>
+
 #include "Database.h"
 
 namespace tf_mapper
 {
     Database::~Database()
     {
-        std::cout << "Database destructor called." << std::endl;
-        std::cout << "Database destructor done." << std::endl;
+        DLOG(INFO) << "Database destructor called.";
+        DLOG(INFO) << "Database destructor done.";
     }
 }

@@ -1,21 +1,23 @@
 #include <iostream>
 
+#include <glog/logging.h>
+
 #include "Mapper.h"
 
 namespace tf_mapper
 {
     Mapper::Mapper(Configuration *p_config)
     {
-        std::cout << "Mapper constructor called." << std::endl;
+        DLOG(INFO) << "Mapper constructor called.";
         this->_map = new Map(p_config);
-        std::cout << "Mapper constructor done." << std::endl;
+        DLOG(INFO) << "Mapper constructor done.";
     }
 
     Mapper::~Mapper()
     {
-        std::cout << "Mapper destructor called." << std::endl;
+        DLOG(INFO) << "Mapper destructor called.";
         delete this->_map;
-        std::cout << "Mapper descructor done." << std::endl;
+        DLOG(INFO) << "Mapper descructor done.";
     }
 }
 

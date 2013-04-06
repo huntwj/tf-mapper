@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <glog/logging.h>
+
 #include "App.h"
 #include "DatabaseFactory.h"
 
@@ -7,17 +9,17 @@ namespace tf_mapper
 {
     App::App()
     {
-        std::cout << "App constructor called." << std::endl;
+        DLOG(INFO) << "App constructor called.";
         this->_config = new Configuration();
         this->_mapper = new Mapper(this->_config);
-        std::cout << "App constructor done." << std::endl;
+        DLOG(INFO) << "App constructor done.";
     }
 
     App::~App()
     {
-        std::cout << "App destructor called." << std::endl;
+        DLOG(INFO) << "App destructor called.";
         delete this->_mapper;
         delete this->_config;
-        std::cout << "App destructor done." << std::endl;
+        DLOG(INFO) << "App destructor done.";
     }
 }

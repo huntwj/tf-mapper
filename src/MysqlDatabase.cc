@@ -1,17 +1,19 @@
 #include <iostream>
 
+#include <glog/logging.h>
+
 #include "MysqlDatabase.h"
 
 namespace tf_mapper {
     MysqlDatabase::MysqlDatabase() {
-        std::cout << "MysqlDatabase constructor called." << std::endl;
+        DLOG(INFO) << "MysqlDatabase constructor called.";
 
-        std::cout << "MysqlDatabase contructor done." << std::endl;
+        DLOG(INFO) << "MysqlDatabase contructor done.";
     }
 
     MysqlDatabase::~MysqlDatabase() {
-        std::cout << "MysqlDatabase destructor called." << std::endl;
+        DLOG(INFO) << "MysqlDatabase destructor called.";
 
-        std::cout << "MysqlDatabase destructor done." << std:: endl;
+        DLOG(INFO) << "MysqlDatabase destructor done." << std:: endl;
     }
 }

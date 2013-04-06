@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <glog/logging.h>
+
 #include "DatabaseFactory.h"
 #include "MySqlDatabase.h"
 
@@ -7,9 +9,9 @@ namespace tf_mapper
 {
     Database *DatabaseFactory::createDatabase(std::string p_type)
     {
-        std::cout << "DatabaseFactory createDatabase called." << std::endl;
+        DLOG(INFO) << "DatabaseFactory createDatabase called.";
         MysqlDatabase *md = new MysqlDatabase();
-        std::cout << "DatabaseFactory createDatabase done." << std::endl;
+        DLOG(INFO) << "DatabaseFactory createDatabase done.";
         return md;
     }
 }
