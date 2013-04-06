@@ -10,7 +10,8 @@ namespace tf_mapper
     Map::Map(Configuration *p_config)
     {
         DLOG(INFO) << "Map constructor called.";
-        this->_database = DatabaseFactory::createDatabase("mysql");
+        DatabaseFactory factory(*p_config);
+        this->_database = factory.createDatabase();
 
         this->loadState();
         DLOG(INFO) << "Map constructor done.";
