@@ -7,6 +7,15 @@
 namespace tf_mapper
 {
     
+    /**
+     * The Mapper class is responsible for analyzing inputs from the mud,
+     * usually from the LogFile(Importer/Reader) classes but also possibly
+     * from the user, and creating a Map instance that satisfies the
+     * "observations" made.
+     *
+     * Note that the map is a transient thing, and in fact sometimes the map
+     * is really just a guess when we don't have good data.
+     */
     class Mapper
     {
         public:

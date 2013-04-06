@@ -6,6 +6,11 @@
 
 namespace tf_mapper
 {
+    /**
+     * The Map class is responsible for representing the world map "as we know
+     * it."  While it is database, it is really more of just a cache for the
+     * transient Map entity managed by the Mapper.
+     */
     class Map
     {
         public:
