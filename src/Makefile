@@ -27,6 +27,9 @@ Database.o: Database.cc Database.h
 DatabaseFactory.o: DatabaseFactory.cc DatabaseFactory.h Database.h MysqlDatabase.h
 	$(GPPC) DatabaseFactory.cc
 
+LogFileImporter.o: LogFileImporter.cc LogFileImporter.h
+	$(GPPC) LogFileImporter.cc
+
 LogFileParser.o: LogFileParser.cc LogFileParser.h
 	$(GPPC) LogFileParser.cc
 

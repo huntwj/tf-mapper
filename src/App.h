@@ -6,6 +6,9 @@
 
 namespace tf_mapper
 {
+    /**
+     * Main application class and OO entry point.
+     */
     class App
     {
         public:

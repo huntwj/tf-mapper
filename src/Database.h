@@ -3,6 +3,9 @@
 
 namespace tf_mapper {
 
+    /**
+     * Abstract base class to define all database operations.
+     */
     class Database
     {
         public:
