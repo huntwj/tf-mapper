@@ -7,6 +7,13 @@
 
 namespace tf_mapper
 {
+    DatabaseFactory::DatabaseFactory(Configuration p_config)
+    {
+        DLOG(INFO) << "DatabaseFactory constructor called.";
+        this->_config = p_config;
+        DLOG(INFO) << "DatabaseFactory constructor done.";
+    }
+
     Database *DatabaseFactory::createDatabase(std::string p_type)
     {
         DLOG(INFO) << "DatabaseFactory createDatabase called.";

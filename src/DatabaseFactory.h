@@ -2,14 +2,36 @@
 #define TF_MAPPER_DATABASEFACTORY_H_
 
 #include <string>
+
+#include "Configuration.h"
 #include "Database.h"
 
 namespace tf_mapper {
 
+    /**
+     * Factory class the delegate Database implementation instantiation
+     * based on configuration data.
+     */
     class DatabaseFactory
     {
         public:
-            static Database *createDatabase(std::string p_type);
+            /**
+             * Construct a DatabaseFactory.
+             *
+             * @param p_config the configuration used to help determine which
+             *                 database to instantiate.
+             */
+            DatabaseFactory(Configuration p_config);
+
+            /**
+             * Factory method to create a database of a particular type.
+             *
+             * The caller is responsible for deleting the object created.
+             */
+            Database *createDatabase(std::string p_type);
+
+        private:
+            Configuration _config;
     };
 }
 
