@@ -8,8 +8,8 @@ INCLUDE_PATH = /opt/local/include
 GPPC = g++ -c -I"$(INCLUDE_PATH)" $(DEBUG_FLAGS)
 
 objects = main.o App.o Configuration.o CursesRunloop.o Database.o \
-			DatabaseFactory.o LogFileParser.o Map.o Mapper.o \
-			MysqlDatabase.o
+			DatabaseFactory.o LogFileImporter.o LogFileParser.o Map.o Mapper.o \
+			MapVisualizer.o MysqlDatabase.o
 
 tf-mapper: $(objects)
 	g++ -L"/opt/local/lib" -lglog -lpanel -lncurses -O3 -o $@ $+
