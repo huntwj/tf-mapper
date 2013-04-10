@@ -19,7 +19,7 @@ namespace tf_mapper
              *
              * @param p_config The configuration object to be used by the map.
              */
-            Map(Configuration *p_config);
+            Map(const Configuration &p_config);
             ~Map();
 
         private:

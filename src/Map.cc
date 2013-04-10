@@ -7,10 +7,10 @@
 
 namespace tf_mapper
 {
-    Map::Map(Configuration *p_config)
+    Map::Map(const Configuration &p_config)
     {
         DLOG(INFO) << "Map constructor called.";
-        DatabaseFactory factory(*p_config);
+        DatabaseFactory factory(p_config);
         this->_database = factory.createDatabase();
 
         this->loadState();

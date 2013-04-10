@@ -6,7 +6,6 @@
 
 namespace tf_mapper
 {
-    
     /**
      * The Mapper class is responsible for analyzing inputs from the mud,
      * usually from the LogFile(Importer/Reader) classes but also possibly
@@ -24,7 +23,7 @@ namespace tf_mapper
              *
              * @param p_config the configuration to be used by this mapper.
              */
-            Mapper(Configuration *p_config);
+            Mapper(const Configuration &p_config);
             ~Mapper();
 
         private:

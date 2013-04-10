@@ -7,11 +7,10 @@
 
 namespace tf_mapper
 {
-    DatabaseFactory::DatabaseFactory(Configuration p_config)
+    DatabaseFactory::DatabaseFactory(const Configuration &p_config) 
+        : _config(p_config)
     {
         DLOG(INFO) << "DatabaseFactory constructor called.";
-
-        this->_config = p_config;
 
         DLOG(INFO) << "DatabaseFactory constructor done.";
     }

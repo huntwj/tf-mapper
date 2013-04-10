@@ -19,7 +19,7 @@ namespace tf_mapper {
              * @param p_config the configuration used to help determine which
              *                 database to instantiate.
              */
-            DatabaseFactory(Configuration p_config);
+            DatabaseFactory(const Configuration &p_config);
 
             /**
              * Factory method to create a database of a particular type.
@@ -29,7 +29,7 @@ namespace tf_mapper {
             Database *createDatabase();
 
         private:
-            Configuration _config;
+            const Configuration &_config;
     };
 }
 

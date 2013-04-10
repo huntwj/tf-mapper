@@ -11,7 +11,11 @@ namespace tf_mapper
     {
         DLOG(INFO) << "App constructor called.";
         this->_config = new Configuration();
-        this->_mapper = new Mapper(this->_config);
+        this->_ui = new CursesRunloop();
+        this->_mapper = new Mapper(*(this->_config));
+
+        this->_ui->run();
+
         DLOG(INFO) << "App constructor done.";
     }
 
@@ -19,6 +23,7 @@ namespace tf_mapper
     {
         DLOG(INFO) << "App destructor called.";
         delete this->_mapper;
+        delete this->_ui;
         delete this->_config;
         DLOG(INFO) << "App destructor done.";
     }

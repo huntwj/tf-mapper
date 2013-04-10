@@ -6,7 +6,7 @@
 
 namespace tf_mapper
 {
-    Mapper::Mapper(Configuration *p_config)
+    Mapper::Mapper(const Configuration &p_config)
     {
         DLOG(INFO) << "Mapper constructor called.";
         this->_map = new Map(p_config);

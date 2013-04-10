@@ -2,6 +2,7 @@
 #define TF_MAPPER_APP_H_
 
 #include "Configuration.h"
+#include "CursesRunloop.h"
 #include "Mapper.h"
 
 namespace tf_mapper
@@ -18,6 +19,7 @@ namespace tf_mapper
         private:
             Mapper *_mapper;
             Configuration *_config;
+            CursesRunloop *_ui;
     };
 }
 #endif

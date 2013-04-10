@@ -7,19 +7,24 @@ INCLUDE_PATH = /opt/local/include
 
 GPPC = g++ -c -I"$(INCLUDE_PATH)" $(DEBUG_FLAGS)
 
-objects = main.o App.o Configuration.o Database.o DatabaseFactory.o LogFileParser.o Map.o Mapper.o MysqlDatabase.o
+objects = main.o App.o Configuration.o CursesRunloop.o Database.o \
+			DatabaseFactory.o LogFileParser.o Map.o Mapper.o \
+			MysqlDatabase.o
 
 tf-mapper: $(objects)
-	g++ -L"/opt/local/lib" -lglog -O3 -o $@ $+
+	g++ -L"/opt/local/lib" -lglog -lpanel -lncurses -O3 -o $@ $+
 
 main.o: main.cc App.h
 	$(GPPC) main.cc
 
-App.o: App.cc App.h Configuration.h DatabaseFactory.h Mapper.h
+App.o: App.cc App.h Configuration.h CursesRunloop.h DatabaseFactory.h Mapper.h
 	$(GPPC) App.cc
 
 Configuration.o: Configuration.cc Configuration.h
 	$(GPPC) Configuration.cc
+
+CursesRunloop.o: CursesRunloop.cc CursesRunloop.h
+	$(GPPC) CursesRunloop.cc
 
 Database.o: Database.cc Database.h
 	$(GPPC) Database.cc
@@ -39,9 +44,22 @@ Map.o: Map.cc Map.h Configuration.h Database.h
 Mapper.o: Mapper.cc Mapper.h Configuration.h Map.h
 	$(GPPC) Mapper.cc
 
+MapVisualizer.o: MapVisualizer.cc MapVisualizer.h
+	$(GPPC) MapVisualizer.cc
+
 MysqlDatabase.o: MysqlDatabase.cc Mapper.h Database.h
 	$(GPPC) MysqlDatabase.cc
+
+#
+# Unit tests.
+#
+
+tests: MapTest.o
+	g++ -L"/opt/local/lib" -lglog -lgtest -O0 -o tf-mapper-tests
+	./tf-mapper-tests
 
 clean:
 	-rm tf-mapper $(objects)
 
+run:
+	./tf-mapper
