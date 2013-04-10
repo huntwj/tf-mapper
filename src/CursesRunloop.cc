@@ -1,6 +1,7 @@
 #include <curses.h>
-#include <glog/logging.h>
 #include <panel.h>
+
+#include <glog/logging.h>
 
 #include "CursesRunloop.h"
 
@@ -22,10 +23,17 @@ namespace tf_mapper
         mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL);
     }
 
+    CursesRunloop::~CursesRunloop()
+    {
+        endwin();
+    }
+
     void CursesRunloop::run()
     {
         for (;;)
         {
+            this->resetSelectors();
+
             int ch = getch();
             if (ch == 'q') break;
 
@@ -46,8 +54,17 @@ namespace tf_mapper
         }
     }
 
-    CursesRunloop::~CursesRunloop()
+    void CursesRunloop::resetSelectors()
     {
-        endwin();
+        FD_ZERO(&(this->_input));
+        this->addReadDescriptor(STDIN_FILENO);
+    }
+
+    void CursesRunloop::addReadDescriptor(int p_fd)
+    {
+        FD_SET(p_fd, &(this->_input));
+        if (p_fd >= this->_nfds) {
+            this->_nfds = p_fd + 1;
+        }
     }
 }
