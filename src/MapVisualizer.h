@@ -14,7 +14,7 @@ namespace tf_mapper
      */
     class MapVisualizer
     {
-    }
+    };
 }
 
 #endif

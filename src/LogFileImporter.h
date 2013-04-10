@@ -12,7 +12,7 @@ namespace tf_mapper {
              * Construct a LogFileImporter for a given file.
              */
             LogFileImporter(std::string p_fileName);
-    }
+    };
 
 }
 
