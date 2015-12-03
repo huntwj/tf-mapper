@@ -3,8 +3,9 @@
 ;;
 /loaded __tf_mapper_main__
 
-/require tf-mapper/pathing.tf
 /require tf-sqlite/main.tf
+
+/require tf-mapper/pathing.tf
 
 ;
 ; This should be called by a mud-specific map helper that captures room
