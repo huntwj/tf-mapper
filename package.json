@@ -1,0 +1,24 @@
+{
+  "name": "tf-mapper",
+  "version": "0.1.0",
+  "description": "Mapping routines for TinyFugue with Lua pathing helpers",
+  "main": "main.tf",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/hunt/tf-mapper.git"
+  },
+  "keywords": [
+    "mapper",
+    "tf",
+    "TinyFugue"
+  ],
+  "author": "Wil Hunt",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hunt/tf-mapper/issues"
+  },
+  "homepage": "https://github.com/hunt/tf-mapper#readme"
+}
