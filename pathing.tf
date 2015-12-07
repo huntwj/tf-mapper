@@ -14,11 +14,11 @@
 ;
 ;/def step = \
 ;    /let _target=%{1}%;\
-;    /if (_target == util_getVar("mapper.currentRoom.id") \
+;    /if (_target == util_getVar("map.currentRoom.id") \
 ;        /echo You're already there!%;\
 ;        /return%;\
 ;    /endif%;\
-;    /let _step=$[mapper_step(mapper_path(_target))]%;\
+;    /let _step=$[map_step(map_path(_target))]%;\
 ;    /echo Stepping toward %{_target} : %_step%;\
 ;    /echo /send -h %_step
 
@@ -31,13 +31,13 @@
 ;
 ;/def go = \
 ;    /let _target=%{1}%;\
-;    /if (_target == util_getVar("mapper.currentRoom.id") \
+;    /if (_target == util_getVar("map.currentRoom.id") \
 ;        /echo You're already there!%;\
 ;        /return%;\
 ;    /endif%;\
 ;    /let pathInfo=$(/pathTo %{_target})%;\
 ;    /if (regmatch("^(\d+) (\d+) (\d+) (.+)$", pathInfo)) \
-;        /mapper_execute_path %{P4}%;\
+;        /map_execute_path %{P4}%;\
 ;    /else \
 ;        /echo Could not find path to %{_target}.%;\
 ;    /endif
@@ -45,55 +45,55 @@
 ;
 ; Given a path, spam each component immediately.
 ;
-;/def mapper_execute_path = \
-;    /let _bit=%;\
-;    /let _rest=%{*}%;\
-;    /while (_rest !~ "") \
-;        /let _semiIdx=%;\
-;        /test _semiIdx := strstr(_rest,";")%;\
-;        /if ( _semiIdx == -1) \
-;            /test _bit := _rest%;\
-;            /test _rest := ""%;\
-;        /else \
-;            /test _bit := substr(_rest, 0, _semiIdx)%;\
-;            /test _rest := substr(_rest, _semiIdx + 1)%;\
-;        /endif%;\
-;        /if (_bit !~ "") \
-;            /echo /send -h %_bit%;\
-;        /endif%;\
-;    /done
+/def map_executePath = \
+    /let _bit=%;\
+    /let _rest=%{*}%;\
+    /while (_rest !~ "") \
+        /let _semiIdx=%;\
+        /test _semiIdx := strstr(_rest,";")%;\
+        /if ( _semiIdx == -1) \
+            /test _bit := _rest%;\
+            /test _rest := ""%;\
+        /else \
+            /test _bit := substr(_rest, 0, _semiIdx)%;\
+            /test _rest := substr(_rest, _semiIdx + 1)%;\
+        /endif%;\
+        /if (_bit !~ "") \
+            /send -h %_bit%;\
+        /endif%;\
+    /done
 
 ;
 ; Run the pathing algorithm and return just the path component.
 ;
-;/def mapper_path = \
-;    /let _pathInfo=$(/mapper_findPath %1)%;\
-;    /if (regmatch("^(\d+) (\d+) (\d+) (.+)$", _pathInfo)) \
-;        /return {P4}%;\
-;    /else \
-;        /return 0%;\
-;    /endif
+/def map_path = \
+    /let _pathInfo=$(/map_findPath %{*})%;\
+    /if (regmatch("^(\d+) (\d+) (\d+) (.+)$", _pathInfo)) \
+        /result {P4}%;\
+    /else \
+        /result 0%;\
+    /endif
 
 ;
 ; Execute the Lua pathing algorithm.
 ;
-/def mapper_findPath = \
+/def map_findPath = \
     /if ({#} > 1) \
         /let _fromId=%{1}%;\
         /let _toOptions=%{-1}%;\
     /elseif ({#} == 1) \
-        /if (!mapper_isCurrentRoomKnown()) \
-            /echo Cannot execute path algorithm. We don't know where we are.%;\
-            /return%;\
+        /let _fromId=$[util_getVar("map.currentRoom.id")]%;\
+        /if (_fromId =~ "") \
+            /echo -aCyellow Cannot execute path algorithm. We don't know where we are.%;\
+            /result -1%;\
         /endif%;\
-        /let _fromId=%{mapper_currentRoomId}$;\
-        /let _toOptions=%{1}%;\
+        /let _toOptions=%{*}%;\
     /endif%;\
     /let _pathScriptLoc=%{TF_NPM_MODULES_ROOT}/tf-mapper/lua/map_path.lua%;\
     /let _r=$(/quote -S -decho !lua %{_pathScriptLoc} %{_fromId} %{_toOptions})%;\
     /result _r
 
-;/def mapper_step = \
+;/def map_step = \
 ;    /let idx=%;\
 ;    /let path=%{1}%;\
 ;    /test idx := 0%;\
@@ -107,4 +107,127 @@
 ;            /return substr(path, dir, 1)%;\
 ;        /endif%;\
 ;    /endif
+
+/def map_createPath = \
+    /let _pathName=%{1}%;\
+    /let _pathVar=$[map_pathVarName(_pathName)]%;\
+    /let _pathProgressVar=$[map_pathProgressVarName(_pathName)]%;\
+    /let _oldPath=$[map_getPath(_pathName)]%;\
+    /let _newPath=%{-1}%;\
+    /if (_oldPath !~ _newPath) \
+        /test util_setVar(_pathVar, _newPath)%;\
+        /test util_setVar(_pathProgressVar, _newPath)%;\
+    /else \
+        /echo Path %{1} unchanged.%;\
+    /endif
+
+/def map_stepPath = \
+    /let _pathName=%{1}%;\
+    /let _path=$[map_getPath(_pathName)]%;\
+    /let _pathProgress=$[map_getPathProgress(_pathName)]%;\
+    /echo Stepping through %{_pathName} : %{_path}%;\
+    /echo Progress is <%{_pathProgress}>%;\
+    /let _currentId=$[util_getVar("map.currentRoom.id")]%;\
+    /if (_currentId =~ "") \
+        /echo -aCyellow Cannot execute step algorithm. We don't know where we are.%;\
+        /result -1%;\
+    /endif%;\
+    /let _next=$(/car %{_pathProgress})%;\
+    /echo _next : %{_next}%;\
+    /if (_next =~ _currentId) \
+        /echo same room, shifting%;\
+        /test _next := map_shiftPathProgress(_pathName)%;\
+    /endif%;\
+    /echo _next : %{_next}%;\
+    /let _path=$[map_path(_next)]%;\
+    /echo _path : %{_path}%;\
+    /let _firstMove=$[map_firstMoveOfPath(_path)]%;\
+    /echo _firstMove : %{_firstMove}%;\
+    /if (_firstMove !~ "0") \
+        /test map_executePath(_firstMove)%;\
+    /else \
+        /echo -aCred Error calculating first move in path.%;\
+    /endif
+
+/def map_pathVarName = \
+    /let _path=%{1}%;\
+    /let _varName=map.path.$[textencode(_path)]%;\
+    /result _varName
+
+/def map_pathProgressVarName = \
+    /let _path=%{1}%;\
+    /let _varName=map.path.progress.$[textencode(_path)]%;\
+    /result _varName
+
+/def map_getPath = \
+    /let _pathName=%{1}%;\
+    /let _pathVar=$[map_pathVarName(_pathName)]%;\
+    /result util_getVar(_pathVar)
+
+/def map_getPathProgress = \
+    /let _pathName=%{1}%;\
+    /let _pathProgressVar=$[map_pathProgressVarName(_pathName)]%;\
+    /result util_getVar(_pathProgressVar)
+
+/def map_shiftPathProgress = \
+    /let _pathName=%{1}%;\
+    /let _pathProgress=$[map_getPathProgress(_pathName)]%;\
+    /if (_pathProgress =~ "") \
+        /test _pathProgress := map_getPath(_pathName)%;\
+    /endif%;\
+    /let _rest=$(/cdr %{_pathProgress})%;\
+    /if (_rest =~ "") \
+        /let _rest=$[map_getPath(_pathName)]%;\
+    /endif%;\
+    /test util_setVar(map_pathProgressVarName(_pathName), _rest)%;\
+    /let _pathProgress=$[map_getPathProgress(_pathName)]%;\
+    /let _next=$(/car %{_rest})%;\
+    /result _next
+
+/def map_firstMoveOfPath = \
+    /let _path=%{*}%;\
+    /let _moveRegexp=$["^(\d+)?([newsud])"]%;\
+    /let _next=%;\
+    /while (!regmatch(_moveRegexp, _path) & strlen(_path) > 0) \
+        /let _nextSemi=$[strstr(_path, ";", 1)]%;\
+        /if (_nextSemi == -1) \
+            /test _next := strcat(_next, _path)%;\
+            /test _path := ""%;\
+        /else \
+            /test _next := strcat(_next, substr(_path, 0, _nextSemi + 1))%;\
+            /test _path := substr(_path, _nextSemi + 1)%;\
+        /endif%;\
+    /done%;\
+    /if (strlen(_path) > 0) \
+        /test _next := strcat(_next,{P2})%;\
+    /endif%;\
+    /result _next
+
+/alias go /map_go %{*}
+/def map_go = \
+    /let _mapPath=$(/map_path %{*})%;\
+    /test map_executePath(_mapPath)
+
+/alias mark /map_markRoom %{*}
+/def map_markRoom = \
+    /let _current=$[util_getVar("map.currentRoom.id")]%;\
+    /if (_current !~ "" & strstr(_current, " ") != -1) \
+        /echo -aCyellow Cannot mark current room. I'm not sure where we are.%;\
+    /else \
+        /test util_setVar("map.markRoom.id", _current)%;\
+        /echo -aCyellow Marking current room (%{_current}).%;\
+    /endif
+
+/alias gmark /map_goToMarkedRoom %{*}
+/def map_goToMarkedRoom = \
+    /let _mark=$[util_getVar("map.markRoom.id")]%;\
+    /if (_mark =~ "") \
+        /echo -aCyellow No room marked. Cancelling.%;\
+    /else \
+        /if ({#} > 0) \
+            /map_go %{1} %{_mark}%;\
+        /else \
+            /map_go %{_mark}%;\
+        /endif%;\
+    /endif
 
