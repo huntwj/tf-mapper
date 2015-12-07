@@ -211,9 +211,10 @@
 /alias mark /map_markRoom %{*}
 /def map_markRoom = \
     /let _current=$[util_getVar("map.currentRoom.id")]%;\
-    /if (_current !~ "" & strstr(_current, " ") != -1) \
+    /let _marked=$[util_getVar("map.markRoom.id")]%;\
+    /if (_current =~ "" | strstr(_current, " ") != -1) \
         /echo -aCyellow Cannot mark current room. I'm not sure where we are.%;\
-    /else \
+    /elseif (_current !~ _marked) \
         /test util_setVar("map.markRoom.id", _current)%;\
         /echo -aCyellow Marking current room (%{_current}).%;\
     /endif
