@@ -4,6 +4,7 @@
   "description": "Mapping routines for TinyFugue with Lua pathing helpers",
   "main": "main.tf",
   "scripts": {
+    "preinstall": "which lua",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
