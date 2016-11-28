@@ -125,29 +125,53 @@
     /let _pathName=%{1}%;\
     /let _path=$[map_getPath(_pathName)]%;\
     /let _pathProgress=$[map_getPathProgress(_pathName)]%;\
-    /echo Stepping through %{_pathName} : %{_path}%;\
-    /echo Progress is <%{_pathProgress}>%;\
+;    /echo Stepping through %{_pathName} : %{_path}%;\
+;    /echo Progress is <%{_pathProgress}>%;\
     /let _currentId=$[util_getVar("map.currentRoom.id")]%;\
     /if (_currentId =~ "") \
         /echo -aCyellow Cannot execute step algorithm. We don't know where we are.%;\
         /result -1%;\
     /endif%;\
     /let _next=$(/car %{_pathProgress})%;\
-    /echo _next : %{_next}%;\
     /if (_next =~ _currentId) \
-        /echo same room, shifting%;\
         /test _next := map_shiftPathProgress(_pathName)%;\
     /endif%;\
-    /echo _next : %{_next}%;\
     /let _path=$[map_path(_next)]%;\
-    /echo _path : %{_path}%;\
     /let _firstMove=$[map_firstMoveOfPath(_path)]%;\
-    /echo _firstMove : %{_firstMove}%;\
     /if (_firstMove !~ "0") \
         /test map_executePath(_firstMove)%;\
     /else \
         /echo -aCred Error calculating first move in path.%;\
     /endif
+
+/def map_nextPath = \
+    /let _pathName=%{1}%;\
+    /let _path=$[map_getPath(_pathName)]%;\
+    /let _pathProgress=$[map_getPathProgress(_pathName)]%;\
+;    /echo Stepping through %{_pathName} : %{_path}%;\
+;    /echo Progress is <%{_pathProgress}>%;\
+    /let _currentId=$[util_getVar("map.currentRoom.id")]%;\
+    /if (_currentId =~ "") \
+        /echo -aCyellow Cannot execute step algorithm. We don't know where we are.%;\
+        /result -1%;\
+    /endif%;\
+    /let _next=$(/car %{_pathProgress})%;\
+    /if (_next =~ _currentId) \
+        /test _next := map_shiftPathProgress(_pathName, 0)%;\
+    /endif%;\
+    /let _path=$[map_path(_next)]%;\
+;    /let _firstMove=$[map_firstMoveOfPath(_path)]%;\
+    /result _path
+;    /if (_path !~ "0") \
+;        /test map_executePath(_path)%;\
+;    /else \
+;        /echo -aCred Error calculating first move in path.%;\
+;    /endif
+
+/def map_path_goNext = \
+    /let _pathName=%{1}%;\
+    /let _path=$[map_nextPath(_pathName)]%;\
+    /test map_executePath(_path)
 
 /def map_pathVarName = \
     /let _path=%{1}%;\
@@ -164,6 +188,23 @@
     /let _pathVar=$[map_pathVarName(_pathName)]%;\
     /result util_getVar(_pathVar)
 
+/def map_resetPath = \
+    /let _pathName=%{1}%;\
+    /let _progressName=$[map_pathProgressVarName(_pathName)]%;\
+    /let _path=$[map_getPath(_pathName)]%;\
+    /test util_setVar(_progressName, _path)
+
+/def map_pushPath = \
+    /let _pathName=%{1}%;\
+    /let _roomId=%{2}%;\
+    /let _varName=$[map_pathProgressVarName(_pathName)]%;\
+    /let _pathProgress=$[map_getPathProgress(_pathName)]%;\
+    /let _first=$(/car %{_pathProgress})%;\
+    /if (_first !~ _roomId) \
+        /test util_setVar(_varName, strcat(_roomId, " ", _pathProgress))%;\
+        /map_getPathProgress %{_varName}%;\
+    /endif
+
 /def map_getPathProgress = \
     /let _pathName=%{1}%;\
     /let _pathProgressVar=$[map_pathProgressVarName(_pathName)]%;\
@@ -171,13 +212,21 @@
 
 /def map_shiftPathProgress = \
     /let _pathName=%{1}%;\
+    /let _circular=1%;\
+    /if ({#} & {2}) \
+        /test _circular := {2}%;\
+    /endif%;\
     /let _pathProgress=$[map_getPathProgress(_pathName)]%;\
     /if (_pathProgress =~ "") \
         /test _pathProgress := map_getPath(_pathName)%;\
     /endif%;\
     /let _rest=$(/cdr %{_pathProgress})%;\
     /if (_rest =~ "") \
-        /let _rest=$[map_getPath(_pathName)]%;\
+        /if (_circular) \
+            /let _rest=$[map_getPath(_pathName)]%;\
+        /else \
+            /echo End of path. Please select a new one.%;\
+        /endif%;\
     /endif%;\
     /test util_setVar(map_pathProgressVarName(_pathName), _rest)%;\
     /let _pathProgress=$[map_getPathProgress(_pathName)]%;\
@@ -206,7 +255,7 @@
 /alias go /map_go %{*}
 /def map_go = \
     /let _mapPath=$(/map_path %{*})%;\
-    /test map_executePath(_mapPath)
+    /return map_executePath(_mapPath)
 
 /alias mark /map_markRoom %{*}
 /def map_markRoom = \
