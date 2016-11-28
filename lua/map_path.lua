@@ -130,7 +130,7 @@ function nodeNeighbors(nodeId)
 --        dumpTable("row", row)
         local rowCost = math.max(1,row.Cost)
         if (row.Param and row.Param ~= "") then
-            rowCost = rowCost * 2
+            rowCost = rowCost * 10
             -- print("doorName is '" .. row.Param .. "'. Making more expensive.")
         end
         table.insert(neighbors, {
