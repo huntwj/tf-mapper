@@ -118,7 +118,8 @@ end
 --
 local dbDriver = require "luasql.sqlite3"
 local dbEnv = assert(dbDriver.sqlite3())
-local dbConn = assert(dbEnv:connect("/Users/wilh/tf.old/wotmud/map/vyomap.dbm"))
+-- local dbConn = assert(dbEnv:connect("/Users/wilh/tf-npm/data/map.sqlite"))
+local dbConn = assert(dbEnv:connect(arg[1]))
 
 function nodeNeighbors(nodeId)
 --    print ("Finding new nodeNeighbors for " .. nodeId)
@@ -228,10 +229,10 @@ function processPathFrom(start, finish)
     end
 end
 
-local finishIdx = 2
+local finishIdx = 3
 
 while arg[finishIdx] do
-    processPathFrom(arg[1], arg[finishIdx])
+    processPathFrom(arg[2], arg[finishIdx])
     finishIdx = finishIdx + 1
 end
 

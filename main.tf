@@ -19,7 +19,11 @@
         /test _roomId := map_findRoomByDesc(_desc, _roomId)%;\
     /endif%;\
     /util_setVar map.currentRoom.id %{_roomId}%;\
-    /quote -S -decho !/Users/wilh/Desktop/SendMapEvent %_roomId%;\
+    /if (isSet("var_user_map_46_sendmapevent")) \
+        /let _commandName=%;\
+        /test _commandName := getVar("map.sendmapevent")%;\
+        /quote -S -decho !%_commandName %_roomId%;\
+    /endif%;\
     /echo Room ID: %{_roomId}
 
 ;

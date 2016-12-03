@@ -90,7 +90,8 @@
         /let _toOptions=%{*}%;\
     /endif%;\
     /let _pathScriptLoc=%{TF_NPM_MODULES_ROOT}/tf-mapper/lua/map_path.lua%;\
-    /let _r=$(/quote -S -decho !lua %{_pathScriptLoc} %{_fromId} %{_toOptions})%;\
+    /let _mapLoc=%{map_mapFile}%;\
+    /let _r=$(/quote -S -decho !lua %{_pathScriptLoc} %{_mapLoc} %{_fromId} %{_toOptions})%;\
     /result _r
 
 ;/def map_step = \
