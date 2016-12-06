@@ -1,6 +1,6 @@
 -- Find a path between two rooms. They are given on the command line
 --
--- lua map_path.lua <fromId> <toId>
+-- lua map_path.lua <mapDbFile> <fromId> <toId>
 --
 
 local data = {}
