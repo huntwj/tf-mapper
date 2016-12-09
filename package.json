@@ -2,7 +2,7 @@
   "name": "tf-mapper",
   "version": "0.1.0",
   "description": "Mapping routines for TinyFugue with Lua pathing helpers",
-  "main": "main.tf",
+  "main": "index.js",
   "scripts": {
     "preinstall": "which lua",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -23,6 +23,10 @@
   },
   "homepage": "https://github.com/hunt/tf-mapper#readme",
   "dependencies": {
-      "tf-sqlite": "git://github.com/huntwj/tf-sqlite"
+    "sqlite3": "^3.1.8",
+    "tf-sqlite": "git://github.com/huntwj/tf-sqlite"
+  },
+  "devDependencies": {
+    "jasmine": "^2.5.2"
   }
 }
