@@ -24,7 +24,7 @@
   "homepage": "https://github.com/hunt/tf-mapper#readme",
   "dependencies": {
     "sqlite3": "^3.1.8",
-    "tf-sqlite": "git://github.com/huntwj/tf-sqlite"
+    "tf-sqlite": "~1.0.0"
   },
   "devDependencies": {
     "jasmine": "^2.5.2"
