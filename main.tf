@@ -129,3 +129,62 @@
     /let _sql=SELECT ZoneTbl.Name FROM ObjectTbl JOIN ZoneTbl ON ObjectTbl.ZoneID = ZoneTbl.ZoneID WHERE ObjectTbl.ObjID = %{_room}%;\
     /result map_rawQuery(_sql)
 
+
+/util_addListener entered_room map_handleEnteredRoom
+/def map_handleEnteredRoom = \
+    /let _roomId=$[getVar("map.currentRoom.id")]%;\
+    /setVar map.moveQueue $(/cdr $[getVar("map.moveQueue")])%;\
+    /let _moveQueue=$[getVar("map.moveQueue")]%;\
+    /let _len=$(/length $[getVar("map.moveQueue")])%;\
+    /let _targetRoomId=$[getVar("map.path.target.roomId")]%;\
+    /if (_roomId == _targetRoomId)\
+        /setVar map.path.target.roomId%;\
+        /event_fire map_path_complete %{_roomId}%;\
+    /elseif (_len == 0 & _targetRoomId !~ "") \
+        /echo Move queue not empty with target room.%;\
+        /if (getVar("map.path.retryCount")) \
+            /test setVar("map.path.retryCount", getVar("map.path.retryCount")-1)%;\
+            /map_go%;\
+        /else \
+            /echo Path target not reached, but retry count used up.%;\
+            /beep%;\
+        /endif%;\
+;    /else \
+;        /echo Move queue empty or no target room.%;\
+    /endif%;\
+;Repeating this line because it may have changed.
+    /let _targetRoomId=$[getVar("map.path.target.roomId")]%;\
+    /if (_targetRoomId) \
+        /echo Target Room: <%{_targetRoomId}>%;\
+    /endif%;\
+    /test 1
+
+; This is a hook so that the built in speed walking can play nice
+; with the rest of the mapping stuffs.
+/def _map_hook = \
+    /map_queueMoveCmd %{*}
+
+/def -mregexp -ip{maxpri} -h"send ^(no(r(t(h)?)?)?|we(s(t)?)?|ea(s(t)?)?|so(u(t(h)?)?)?|up|do(w(n)?)?|l(o(o(k)?)?)?)$" map_detectMovement = \
+    /map_queueMoveCmd $[substr({P0}, 0,1)]%;\
+    /send %{*}
+
+/def map_queueMoveCmd = \
+    /test setVar("map.moveQueue", strcat(getVar("map.moveQueue"), " ", {1}))%;\
+;    /echo Move queue is now <$[getVar("map.moveQueue")]>%;\
+    /test 1
+
+/util_addListener combat_detected map_clearMoveQueue
+/def map_clearMoveQueue = \
+    /test setVar("map.moveQueue", "")
+
+/def -mregexp -t"^Alas, you cannot go that way\.\.\.$" map_cannotGoThatWay = \
+    /map_queue_pop
+
+/def -mregexp -t"^(.*) seems to be closed\.$" map_closed_door = \
+    /map_queue_pop
+
+/def map_queue_pop = \
+    /let _val=$(/car $[getVar("map.moveQueue")])%;\
+    /setVar map.moveQueue $(/cdr $[getVar("map.moveQueue")])%;\
+    /result _val
+

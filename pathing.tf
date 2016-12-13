@@ -81,6 +81,13 @@
     /if ({#} > 1) \
         /let _fromId=%{1}%;\
         /let _toOptions=%{-1}%;\
+    /elseif ({#} == 0) \
+        /let _fromId=$[util_getVar("map.currentRoom.id")]%;\
+        /if (_fromId =~ "") \
+            /echo -aCyellow Cannot execute path algorithm. We don't know where we are.%;\
+            /result -1%;\
+        /endif%;\
+        /let _toOptions=$[getVar("map.path.target.roomId")]%;\
     /elseif ({#} == 1) \
         /let _fromId=$[util_getVar("map.currentRoom.id")]%;\
         /if (_fromId =~ "") \
@@ -253,10 +260,25 @@
     /endif%;\
     /result _next
 
-/alias go /map_go %{*}
+/alias go /setVar map.path.retryCount 3 %; /map_go %{*}
+
 /def map_go = \
+    /if ({#} > 1) \
+        /setVar map.path.target.roomId %{2}%;\
+    /elseif ({#} == 1) \
+        /setVar map.path.target.roomId %{1}%;\
+    /endif%;\
     /let _mapPath=$(/map_path %{*})%;\
     /return map_executePath(_mapPath)
+
+/def map_go_and = \
+    /setVar map.path.completeHandler %{1}%;\
+    /util_addListener map_path_complete map_path_complete_handler%;\
+    /map_go %{-1}
+
+/def map_path_complete_handler = \
+    /util_removeListener map_path_complete map_path_complete_handler%;\
+    /$[getVar("map.path.completeHandler")] $[getVar("map.path.target.roomId")]    
 
 /alias mark /map_markRoom %{*}
 /def map_markRoom = \
