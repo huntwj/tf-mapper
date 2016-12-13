@@ -1,6 +1,6 @@
 {
   "name": "tf-mapper",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Mapping routines for TinyFugue with Lua pathing helpers",
   "main": "index.js",
   "scripts": {
