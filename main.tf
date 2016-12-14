@@ -155,6 +155,9 @@
 ;Repeating this line because it may have changed.
     /let _targetRoomId=$[getVar("map.path.target.roomId")]%;\
     /if (_targetRoomId) \
+        /if (strlen(getVar("map.path.completeHandler")) > 0) \
+            /test _targetRoomId := strcat(_targetRoomId, " -> ", getVar("map.path.completeHandler"))%;\
+        /endif%;\
         /echo Target Room: <%{_targetRoomId}>%;\
     /endif%;\
     /test 1
