@@ -140,17 +140,8 @@
     /if (_roomId == _targetRoomId)\
         /setVar map.path.target.roomId%;\
         /event_fire map_path_complete %{_roomId}%;\
-    /elseif (_len == 0 & _targetRoomId !~ "") \
-        /echo Move queue not empty with target room.%;\
-        /if (getVar("map.path.retryCount")) \
-            /test setVar("map.path.retryCount", getVar("map.path.retryCount")-1)%;\
-            /map_go%;\
-        /else \
-            /echo Path target not reached, but retry count used up.%;\
-            /beep%;\
-        /endif%;\
-;    /else \
-;        /echo Move queue empty or no target room.%;\
+    /else \
+        /map_path_repathIfNecessary%;\
     /endif%;\
 ;Repeating this line because it may have changed.
     /let _targetRoomId=$[getVar("map.path.target.roomId")]%;\
@@ -161,6 +152,21 @@
         /echo Target Room: <%{_targetRoomId}>%;\
     /endif%;\
     /test 1
+
+/def map_path_repathIfNecessary = \
+    /let _len=$(/length $[getVar("map.moveQueue")])%;\
+    /let _targetRoomId=$[getVar("map.path.target.roomId")]%;\
+    /if (_len == 0 & _targetRoomId !~ "") \
+        /echo Move queue not empty with target room.%;\
+        /if (getVar("map.path.retryCount")) \
+            /test setVar("map.path.retryCount", getVar("map.path.retryCount")-1)%;\
+            /map_go%;\
+        /else \
+            /echo Path target not reached, but retry count used up.%;\
+            /beep%;\
+        /endif%;\
+    /endif
+
 
 ; This is a hook so that the built in speed walking can play nice
 ; with the rest of the mapping stuffs.
@@ -176,15 +182,16 @@
 ;    /echo Move queue is now <$[getVar("map.moveQueue")]>%;\
     /test 1
 
-/util_addListener combat_detected map_clearMoveQueue
-/def map_clearMoveQueue = \
+/util_addListener combat_detected map_queue_clear
+/def map_queue_clear = \
     /test setVar("map.moveQueue", "")
 
 /def -mregexp -t"^Alas, you cannot go that way\.\.\.$" map_cannotGoThatWay = \
     /map_queue_pop
 
 /def -mregexp -t"^(.*) seems to be closed\.$" map_closed_door = \
-    /map_queue_pop
+    /map_queue_pop%;\
+    /map_path_repathIfNecessary
 
 /def map_queue_pop = \
     /let _val=$(/car $[getVar("map.moveQueue")])%;\
