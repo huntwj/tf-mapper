@@ -7,6 +7,16 @@
 
 /require tf-mapper/pathing.tf
 
+/set map_editMode 0
+
+/def map_edit = \
+    /test map_editMode := !map_editMode%;\
+    /let _status=$[map_editMode ? "On" : "Off"]%;\
+    /if (map_editMode) \
+        look%;\
+    /endif%;\
+    /echo Map Edit Mode: %{_status}
+
 ;
 ; This should be called by a mud-specific map helper that captures room
 ; details to pass into the mapper.
@@ -18,13 +28,117 @@
     /if (strstr(_roomId, " ") != -1) \
         /test _roomId := map_findRoomByDesc(_desc, _roomId)%;\
     /endif%;\
-    /util_setVar map.currentRoom.id %{_roomId}%;\
-    /if (isSet("var_user_map_46_sendmapevent")) \
-        /let _commandName=%;\
-        /test _commandName := getVar("map.sendmapevent")%;\
-        /quote -S -decho !%_commandName %_roomId%;\
+    /if (_roomId =~ "")\
+        /let _prevRoom=$[getVar("map.currentRoom.id")]%;\
+        /let _lastDir=$(/car $[getVar("map.moveQueue")])%;\
+        /let _bestGuess=%;\
+        /test _bestGuess := map_guessRoomFrom(_prevRoom, _lastDir)%;\
+        /echo Could not find matching room.%;\
+        /if (_bestGuess !~ "") \
+            /echo Best guess room ID: %{_bestGuess} <%{_lastDir} from $[map_getRoomName(_prevRoom)] (%{_prevRoom})>%;\
+            /setVar map.currentRoom.guess %{_bestGuess}%;\
+        /endif%;\
+    /else \
+        /util_setVar map.currentRoom.id %{_roomId}%;\
+        /if (isSet("var_user_map_46_sendmapevent")) \
+            /let _commandName=%;\
+            /test _commandName := getVar("map.sendmapevent")%;\
+            /quote -S -decho !%_commandName %_roomId%;\
+        /endif%;\
+        /echo Room ID: %{_roomId}%;\
+    /endif
+
+/def map_checkGuess = \
+    /let _guess=$[getVar("map.currentRoom.guess")]%;\
+    /map_dumpRoomInfo %{_guess}
+
+/def map_dumpRoomInfo = \
+    /let _roomId=%{1}%;\
+    /let _name=$[map_getRoomName(_roomId)]%;\
+    /let _desc=$[map_getRoomDescription(_roomId)]%;\
+    /echo Current Guess:%;\
+    /test echo("-----")%;\
+    /echo %{_name} (%{_roomId})%;\
+    /test map_dumpRoomDescription(_desc)%;\
+    /test echo("-----")
+
+/def map_getRoomName = \
+    /let _roomId=%{1}%;\
+    /let _sql=$[strcat("SELECT [Name] FROM [ObjectTbl] WHERE [ObjID] = '", sqlite_escapeSql(_roomId), "'")]%;\
+    /let _r=$[sqlite_rawQuery(map_mapFile, _sql)]%;\
+    /result _r
+
+/def map_getRoomDescription = \
+    /let _roomId=%{1}%;\
+    /let _sql=$[strcat("SELECT [Desc] FROM [ObjectTbl] WHERE [ObjID] = '", sqlite_escapeSql(_roomId), "'")]%;\
+    /let _r=$[sqlite_rawQuery(map_mapFile, _sql)]%;\
+    /result _r
+
+/def map_dumpRoomDescription = \
+    /let _desc=%{1}%;\
+    /let _i=0%;\
+    /let _line=0%;\
+    /while (_i < strlen(_desc) & _line < 10) \
+        /let _cr=$[strchr(_desc, strcat(char(10),char(13)), _i)]%;\
+        /if (_cr == -1) \
+            /let _remaining=$[substr(_desc, _i)]%;\
+            /if (_remaining !~ "")\
+                /echo %{_remaining}%;\
+            /endif%;\
+            /break%;\
+        /else \
+            /echo $[substr(_desc, _i, _cr-_i)]%;\
+            /test _i := _cr + 1%;\
+        /endif%;\
+        /test _line := _line + 1%;\
+    /done%;\
+    /if (_line >= 10)\
+        /echo ...%;\
+    /endif
+
+/def map_updateRoom = \
+    /if (!map_editMode) \
+        /echo Cannot update room. Not in map edit mode.%;\
+        /return%;\
     /endif%;\
-    /echo Room ID: %{_roomId}
+    /let _roomId=%{1}%;\
+    /if (_roomId =~ "" & getVar("map.currentRoom.guess") !~ "") \
+        /test _roomId := getVar("map.currentRoom.guess")%;\
+    /endif%;\
+    /if (_roomId =~ "") \
+        /echo Cannot update room with no id. <$[getVar("map.currentRoom.guess")]>%;\
+        /return%;\
+    /else \
+        /echo Updating room %{_roomId}%;\
+    /endif%;\
+    /let _name=$[redisGet("currentRoom:name")]%;\
+    /let _desc=$[map_getDescWithRedis()]%;\
+    /let _sql=%;\
+    /test _sql := strcat("UPDATE [ObjectTbl] SET [Name] = '", sqlite_escapeSql(_name), "' WHERE [ObjID] = ", _roomId)%;\
+    /test sqlite_rawQuery(map_mapFile, _sql)%;\
+    /test _sql := strcat("UPDATE [ObjectTbl] SET [Desc] = '", sqlite_escapeSql(_desc), "' WHERE [ObjID] = ", _roomId)%;\
+    /test sqlite_rawQuery(map_mapFile, _sql)%;\
+    /echo Updated Room:%;\
+    /map_dumpRoomInfo %{_roomId}
+
+/def map_roomCapturedWithRedis = \
+    /let _name=%;\
+    /let _desc=%;\
+    /test _name := redisGet("currentRoom:name")%;\
+    /test _desc := map_getDescWithRedis()%;\
+;    /echo Name: %{_name}%;\
+;    /echo Description:%;\
+;    /echo %{_desc}%;\
+    /test 0
+
+/def map_getDescWithRedis = \
+    /let _desc=%;\
+    /let _lines=$[redisLLen("currentRoom:description")]%;\
+    /for i 1 %{_lines} \
+        /test _desc := strcat(_desc, redisLIndex("currentRoom:description", i-1), char(10))%;\
+;    /echo Desc from redis:%;\
+;    /echo %{_desc}%;\
+    /result _desc
 
 ;
 ; Attempt to find a room by looking up its name.
@@ -86,6 +200,15 @@
     /let _sql=$[strcat("SELECT ExitID, DirName, ToID, Param FROM ExitTbl JOIN DirTbl ON DirType = DirTbl.DirID-1 WHERE FromID = '",sqlite_escapeSql(util_getVar("map.currentRoom.id")),"';")]%;\
     /let _r=$[map_rawQuery(_sql)]%;\
     /map_dumpExitList %{1} %{_r}
+
+/def map_guessRoomFrom = \
+    /let _roomId=%{1}%;\
+    /let _lastDir=%{2}%;\
+    /let _sql=$[strcat("SELECT [ToID] FROM ExitTbl JOIN DirTbl ON DirType = DirTbl.DirID-1 WHERE FromID = '", sqlite_escapeSql(_roomId), "' AND DirName LIKE '", _lastDir, "%';")]%;\
+;    /echo SQL: %{_sql}%;\
+    /let _r=$[map_rawQuery(_sql)]%;\
+;    /echo Result: %{_r}%;\
+    /result _r
 
 /def map_dumpExitList = \
     /let _verbose=0%;\
