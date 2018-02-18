@@ -33,10 +33,16 @@
         /let _lastDir=$(/car $[getVar("map.moveQueue")])%;\
         /let _bestGuess=%;\
         /test _bestGuess := map_guessRoomFrom(_prevRoom, _lastDir)%;\
-        /echo Could not find matching room.%;\
+        /echo -aCyellow *** Could not find matching room. /map_updateRoom? ***%;\
         /if (_bestGuess !~ "") \
             /echo Best guess room ID: %{_bestGuess} <%{_lastDir} from $[map_getRoomName(_prevRoom)] (%{_prevRoom})>%;\
             /setVar map.currentRoom.guess %{_bestGuess}%;\
+            /util_setVar map.currentRoom.id %{_bestGuess}%;\
+            /if (isSet("var_user_map_46_sendmapevent")) \
+                /let _commandName=%;\
+                /test _commandName := getVar("map.sendmapevent")%;\
+                /quote -S -decho !%_commandName %_bestGuess%;\
+            /endif%;\
         /endif%;\
     /else \
         /util_setVar map.currentRoom.id %{_roomId}%;\
@@ -96,11 +102,12 @@
         /echo ...%;\
     /endif
 
+/alias mapu /map_updateRoom
 /def map_updateRoom = \
-    /if (!map_editMode) \
-        /echo Cannot update room. Not in map edit mode.%;\
-        /return%;\
-    /endif%;\
+;    /if (!map_editMode) \
+;        /echo Cannot update room. Not in map edit mode.%;\
+;        /return%;\
+;    /endif%;\
     /let _roomId=%{1}%;\
     /if (_roomId =~ "" & getVar("map.currentRoom.guess") !~ "") \
         /test _roomId := getVar("map.currentRoom.guess")%;\
@@ -111,15 +118,24 @@
     /else \
         /echo Updating room %{_roomId}%;\
     /endif%;\
-    /let _name=$[redisGet("currentRoom:name")]%;\
-    /let _desc=$[map_getDescWithRedis()]%;\
+    /let _name=$[util_getVar("map.currentRoom.name")]%;\
+;    /let _name=$[redisGet("currentRoom:name")]%;\
+;    /let _desc=$[map_getDescWithRedis()]%;\
+    /let _desc=$[util_getVar("map.currentRoom.description")]%;\
+    /let _rdesc=$[replace(char(10), '\\n', _desc)]%;\
     /let _sql=%;\
     /test _sql := strcat("UPDATE [ObjectTbl] SET [Name] = '", sqlite_escapeSql(_name), "' WHERE [ObjID] = ", _roomId)%;\
-    /test sqlite_rawQuery(map_mapFile, _sql)%;\
-    /test _sql := strcat("UPDATE [ObjectTbl] SET [Desc] = '", sqlite_escapeSql(_desc), "' WHERE [ObjID] = ", _roomId)%;\
-    /test sqlite_rawQuery(map_mapFile, _sql)%;\
-    /echo Updated Room:%;\
-    /map_dumpRoomInfo %{_roomId}
+;    /echo Update name: %{_sql}%;\
+    /let _update=%;\
+    /test _update := sqlite_rawQuery(map_mapFile, _sql)%;\
+    /test _sql := strcat("UPDATE [ObjectTbl] SET [Desc] = '", sqlite_escapeSql(_rdesc), "' WHERE [ObjID] = ", _roomId)%;\
+;    /echo Update: %{_update}%;\
+;    /echo Update description: %{_sql}%;\
+    /test _update := sqlite_rawQuery(map_mapFile, _sql)%;\
+;    /echo Update: %{_update}%;\
+;    /echo Updated Room:%;\
+;    /map_dumpRoomInfo %{_roomId}%;\
+    /test 1
 
 /def map_roomCapturedWithRedis = \
     /let _name=%;\
@@ -200,6 +216,27 @@
     /let _sql=$[strcat("SELECT ExitID, DirName, ToID, Param FROM ExitTbl JOIN DirTbl ON DirType = DirTbl.DirID-1 WHERE FromID = '",sqlite_escapeSql(util_getVar("map.currentRoom.id")),"';")]%;\
     /let _r=$[map_rawQuery(_sql)]%;\
     /map_dumpExitList %{1} %{_r}
+
+/alias mo /map_open %{*}
+/def map_open = \
+    /let _sql=$[strcat("SELECT Param FROM ExitTbl JOIN DirTbl ON DirType = DirTbl.DirID-1 WHERE FromID = '", sqlite_escapeSql(util_getVar("map.currentRoom.id")), "' AND Param <> ''")]%;\
+    /if ({#}) \
+        /let _dir=%{1}%;\
+        /test _sql := strcat(_sql, " AND DirName LIKE '", sqlite_escapeSql(_dir), "%%'")%;\
+    /endif%;\
+    /test _sql := strcat(_sql, " LIMIT 1")%;\
+;    /echo Query: %{_sql}%;\
+    /let _r=$[map_rawQuery(_sql)]%;\
+;    /echo Result: %{_r}%;\
+    /if (_r =~ '') \
+        /if ({#}) \
+            open %{*}%;\
+        /else \
+            /echo Could not find any matching doors.%;\
+        /endif%;\
+    /else \
+        open %{_r}%;\
+    /endif
 
 /def map_guessRoomFrom = \
     /let _roomId=%{1}%;\
@@ -309,7 +346,16 @@
 /def map_queue_clear = \
     /test setVar("map.moveQueue", "")
 
+/def -mregexp -t"^Your mount is too exhausted\.$" map_mountExhausted = \
+    /map_queue_pop
+
 /def -mregexp -t"^Alas, you cannot go that way\.\.\.$" map_cannotGoThatWay = \
+    /map_queue_pop
+
+/def -mregexp -t"^You need a boat to go there\.$" map_youNeedABoatToGoThere = \
+    /map_queue_pop
+
+/def -mregexp -t"^You can't ride in there\.$" map_cannotRideInThere = \
     /map_queue_pop
 
 /def -mregexp -t"^(.*) seems to be closed\.$" map_closed_door = \

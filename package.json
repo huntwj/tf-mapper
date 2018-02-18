@@ -23,10 +23,12 @@
   },
   "homepage": "https://github.com/hunt/tf-mapper#readme",
   "dependencies": {
+    "a-star-for-async-data": "~1.0.1",
+    "sqlite3": "^3.1.11",
     "tf-sqlite": "~1.0.0",
     "tf-util": "~1.0.1"
   },
   "devDependencies": {
-    "jasmine": "^2.5.2"
+    "jasmine": "^2.8.0"
   }
 }

@@ -65,6 +65,7 @@ function Dijkstra(start, finish)
 
         -- We have a solution!
         if tostring(best) == tostring(finish) then break end
+        if dataForNode(best).idName == tostring(finish) then break end
 
         -- Perhaps there was no connection?
         if not best then 
@@ -124,7 +125,7 @@ local dbConn = assert(dbEnv:connect(arg[1]))
 function nodeNeighbors(nodeId)
 --    print ("Finding new nodeNeighbors for " .. nodeId)
     local neighbors = {}
-    local cur = assert(dbConn:execute("SELECT ExitID, ToID, DirName, ExitTbl.Name, ExitTbl.Param, Cost FROM ExitTbl JOIN DirTbl ON (DirType+1) = DirID JOIN ObjectTbl ON ObjID = ToID WHERE FromID = " .. nodeId))
+    local cur = assert(dbConn:execute("SELECT ExitID, ToID, DirName, ExitTbl.Name, ExitTbl.Param, Cost, IDName FROM ExitTbl JOIN DirTbl ON (DirType+1) = DirID JOIN ObjectTbl ON ObjID = ToID WHERE FromID = " .. nodeId))
     local row = cur:fetch({}, "a")
     while row do
 --        print(" -> " .. row.ToID)
@@ -140,7 +141,8 @@ function nodeNeighbors(nodeId)
             dirName = tostring(row.DirName),
             doorCmd = tostring(row.Name),
             doorName = tostring(row.Param),
-            cost = rowCost
+            cost = rowCost,
+            idName = tostring(row.IDName)
         })
         row = cur:fetch(row, "a")
     end
