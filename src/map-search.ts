@@ -31,16 +31,12 @@ export class MapSearch {
 		return new Promise<string>((success, error) => {
 			astar.findPath(startId, endId)
 				.then((path: IGraphPath<IMapGraphEdge>) => {
-					var stringifiedPath = stringifyPath(path);
-					var end = new Date();
-					// console.log("hVal cache:");
-					// console.log(db.hValCache);
-					console.log("Path calculated in " + (end.getTime() - start.getTime()) + "ms with " + db.dbCount + " calls to the database using " + db.dbTime + "ms of that time.");
+					const stringifiedPath = stringifyPath(path);
 
 					success(stringifiedPath);
 				})
 				.catch(function(reason: any) {
-					var msg = "Error calling findPath: " + reason;
+					const msg = "Error calling findPath: " + reason;
 					error(msg);
 				});
 		});
