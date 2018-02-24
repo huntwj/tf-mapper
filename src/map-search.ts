@@ -3,10 +3,10 @@ import { MapDatabase, IMapGraphEdge } from "./map-database";
 
 function stringifyPath(searchResult: IGraphPath<IMapGraphEdge>) {
 	let pathString = "";
-	for (let edgeIdx in searchResult.path) {
-		let edge = searchResult.path[edgeIdx];
+	searchResult.path.forEach((edge) => {
 		pathString += " " + edge.id;
-	}
+		// pathString += " " + edge.exit;
+	});
 	pathString = searchResult.cost + pathString;
 	return pathString;
 }
@@ -19,7 +19,7 @@ export class MapSearch {
 		this.db = new MapDatabase(dbFilename);
 		this.astar = new Astar<IMapGraphEdge>({
 			exitArcsForNodeId: (nodeId: GraphNode) => this.db.lookupExitArcsForNodeId(nodeId),
-			h: (target: GraphNode, nodeId: GraphNode) => this.db.lookupHValForNodeId(nodeId)
+			// h: (target: GraphNode, nodeId: GraphNode) => this.db.lookupHValForNodeId(nodeId)
 		});
 	}
 
