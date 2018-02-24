@@ -1,10 +1,20 @@
-var sqlite3 = require("sqlite3");
+import * as sqlite3 from "sqlite3";
+import { IGraphEdge } from 'a-star-for-async-data';
 
-class MapDatabase
+export interface IMapGraphEdge extends IGraphEdge {
+	id: string;
+}
+
+export class MapDatabase
 {
-	constructor()
+	private db: sqlite3.Database;
+	public dbCount: number;
+	public dbTime: number;
+  private hValCache: { [key: string]: number };
+
+	constructor(dbFilename: string)
 	{
-        this.db = new sqlite3.Database("map.sqlite", sqlite3.OPEN_READWRITE);
+        this.db = new sqlite3.Database(dbFilename, sqlite3.OPEN_READWRITE);
 
         this.dbCount = 0;
         this.dbTime = 0;
@@ -12,20 +22,19 @@ class MapDatabase
         this.hValCache = {};
 	}
 
-	lookupHValForNodeId(nodeId) {
+	lookupHValForNodeId(nodeId: string) {
 		if (typeof this.hValCache[String(nodeId)] === "undefined") {
 			// console.log("hVal cache miss for " + nodeId);
-			return Promise.resolve(0);
+			return Promise.resolve(1);
 		} else {
 			return Promise.resolve(this.hValCache[String(nodeId)]);
 		}
 	}
 
-	lookupExitArcsForNodeId(nodeId) {
+	public lookupExitArcsForNodeId = (nodeId: string) => {
 		let db = this.db;
-		let lookupDistanceBetween = this.lookupDistanceBetween;
 		let self = this;
-		return new Promise(function (resolve, reject) {
+		return new Promise<IMapGraphEdge[]>((resolve, reject) => {
 	        this.dbCount++;
 	        var queryStart = new Date();
 			db.all(`
@@ -74,12 +83,12 @@ class MapDatabase
 					resolve(rows);
 				}
 			});
-		}.bind(this));
+		});
 	}
 
-	checkAvailability(success, failure)
+	private checkAvailability = (success: (_: number) => void, failure: (_: any) => void) =>
 	{
-        this.db.serialize(function() {
+        this.db.serialize(() => {
 	        this.db.all("select count(name) AS tblCount from sqlite_master where type='table'", function (err, tables) {
 	        	if (err) {
 	        		failure(err);
@@ -93,9 +102,6 @@ class MapDatabase
 	        		}
 	        	}
 	        });
-	    }.bind(this));
-
+	    });
 	}
 }
-
-module.exports = MapDatabase;
