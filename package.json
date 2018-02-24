@@ -4,8 +4,8 @@
   "description": "Mapping routines for TinyFugue with Lua pathing helpers",
   "main": "index.js",
   "scripts": {
-    "preinstall": "which lua",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "test": "jasmine-ts"
   },
   "repository": {
     "type": "git",
@@ -23,12 +23,16 @@
   },
   "homepage": "https://github.com/hunt/tf-mapper#readme",
   "dependencies": {
-    "a-star-for-async-data": "~1.0.1",
+    "a-star-for-async-data": "^1.0.3",
     "sqlite3": "^3.1.13",
     "tf-sqlite": "~1.0.0",
     "tf-util": "~1.0.1"
   },
   "devDependencies": {
-    "jasmine": "^2.99.0"
+    "@types/jasmine": "^2.8.6",
+    "@types/sqlite3": "^3.1.1",
+    "jasmine": "^2.99.0",
+    "jasmine-ts": "^0.2.1",
+    "typescript": "^2.7.2"
   }
 }
