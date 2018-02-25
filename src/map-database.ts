@@ -37,14 +37,6 @@ export class MapDatabase {
 		this.hValCache = {};
 	}
 
-	lookupHValForNodeId(nodeId: string) {
-		if (typeof this.hValCache[String(nodeId)] === "undefined") {
-			return Promise.resolve(1);
-		} else {
-			return Promise.resolve(this.hValCache[String(nodeId)]);
-		}
-	}
-
 	public lookupExitArcsForNodeId = (nodeId: string) => {
 		let db = this.db;
 		let self = this;
