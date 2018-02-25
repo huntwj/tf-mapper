@@ -1,13 +1,22 @@
 import { MapSearch } from "../src/map-search";
+import 'dotenv/config';
 
 let profile = false;
+if (process.env['TF_MAPPER_PROFILE']) {
+	profile = Boolean(process.env['TF_MAPPER_PROFILE']);
+}
+
+let mapPath = "map.sqlite";
+if (process.env['TF_MAPPER_PATH']) {
+	mapPath = process.env['TF_MAPPER_PATH'] as string;
+}
 
 describe("Map search", function () {
 	let mapSearch: MapSearch;
 	let start: number;
 
 	beforeAll(function () {
-		mapSearch = new MapSearch("/path/to/map.sqlite");
+		mapSearch = new MapSearch(mapPath);
 	});
 
 	if (profile) {
