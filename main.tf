@@ -4,7 +4,6 @@
 /loaded __tf_mapper_main__
 
 /require tf-sqlite/main.tf
-
 /require tf-mapper/pathing.tf
 
 /set map_editMode 0
@@ -21,6 +20,12 @@
 ; This should be called by a mud-specific map helper that captures room
 ; details to pass into the mapper.
 ;
+; Parameters:
+; 1) The room name
+; 2) The room description (possibly empty)
+;
+; TODO: Decouple this via events?
+; TODO: Maybe this code can be moved to Node?
 /def map_roomCaptured = \
     /let _name=%{1}%;\
     /let _desc=%{2}%;\
@@ -38,21 +43,21 @@
             /echo Best guess room ID: %{_bestGuess} <%{_lastDir} from $[map_getRoomName(_prevRoom)] (%{_prevRoom})>%;\
             /setVar map.currentRoom.guess %{_bestGuess}%;\
             /util_setVar map.currentRoom.id %{_bestGuess}%;\
-            /if (isSet("var_user_map_46_sendmapevent")) \
-                /let _commandName=%;\
-                /test _commandName := getVar("map.sendmapevent")%;\
-                /quote -S -decho !%{_commandName} %{_bestGuess}%;\
-            /endif%;\
+            /map_updateMapView %{_bestGuess}%;\
         /endif%;\
     /else \
         /util_setVar map.currentRoom.id %{_roomId}%;\
-        /if (isSet("var_user_map_46_sendmapevent")) \
-            /let _commandName=%;\
-            /test _commandName := getVar("map.sendmapevent")%;\
-            /quote -S -decho !%{_commandName} %{_roomId}%;\
-        /endif%;\
+        /map_updateMapView %{_roomId}%;\
         /echo Room ID: %{_roomId}%;\
     /endif
+
+/def map_updateMapView = \
+    /let _roomId=%{1}%;\
+    /if (isSet("var_user_map_46_sendmapevent")) \
+        /let _commandName=%;\
+        /test _commandName := getVar("map.sendmapevent")%;\
+        /quote -S -decho !%{_commandName} %{_roomId}%;\
+    /endif%;\
 
 /def map_checkGuess = \
     /let _guess=$[getVar("map.currentRoom.guess")]%;\
@@ -71,13 +76,13 @@
 /def map_getRoomName = \
     /let _roomId=%{1}%;\
     /let _sql=$[strcat("SELECT [Name] FROM [ObjectTbl] WHERE [ObjID] = '", sqlite_escapeSql(_roomId), "'")]%;\
-    /let _r=$[sqlite_rawQuery(map_mapFile, _sql)]%;\
+    /let _r=$[map_query(_sql)]%;\
     /result _r
 
 /def map_getRoomDescription = \
     /let _roomId=%{1}%;\
     /let _sql=$[strcat("SELECT [Desc] FROM [ObjectTbl] WHERE [ObjID] = '", sqlite_escapeSql(_roomId), "'")]%;\
-    /let _r=$[sqlite_rawQuery(map_mapFile, _sql)]%;\
+    /let _r=$[map_query(_sql)]%;\
     /result _r
 
 /def map_dumpRoomDescription = \
@@ -127,11 +132,11 @@
     /test _sql := strcat("UPDATE [ObjectTbl] SET [Name] = '", sqlite_escapeSql(_name), "' WHERE [ObjID] = ", _roomId)%;\
 ;    /echo Update name: %{_sql}%;\
     /let _update=%;\
-    /test _update := sqlite_rawQuery(map_mapFile, _sql)%;\
+    /test _update := map_query(_sql)%;\
     /test _sql := strcat("UPDATE [ObjectTbl] SET [Desc] = '", sqlite_escapeSql(_rdesc), "' WHERE [ObjID] = ", _roomId)%;\
 ;    /echo Update: %{_update}%;\
 ;    /echo Update description: %{_sql}%;\
-    /test _update := sqlite_rawQuery(map_mapFile, _sql)%;\
+    /test _update := map_query(_sql)%;\
 ;    /echo Update: %{_update}%;\
 ;    /echo Updated Room:%;\
 ;    /map_dumpRoomInfo %{_roomId}%;\
@@ -163,7 +168,7 @@
     /let _roomName=%{*}%;\
     /let _sql=%;\
     /test _sql := strcat("SELECT [ObjID] FROM [ObjectTbl] WHERE [Name] = '", sqlite_escapeSql(_roomName), "'")%;\
-    /return sqlite_rawQuery(map_mapFile, _sql)
+    /return map_query(_sql)
 
 /def map_findRoomByDesc = \
     /let _descClause=$[map_getDescClause({1})]%;\
@@ -175,7 +180,7 @@
     /endif%;\
     /test _sql := strcat(_sql, _descClause)%;\
 ;    /echo _sql : '%{_sql}'%;\
-    /return sqlite_rawQuery(map_mapFile, _sql)
+    /return map_query(_sql)
 
 /def map_getDescClause = \
     /let _desc=$[replace("'", "''", {*})]%;\
@@ -204,7 +209,7 @@
     /let _currentId=$[util_getVar("map.currentRoom.id")]%;\
     /result (_currentId !~ "" & strstr(_currentId, " ") == -1)
 
-/def map_rawQuery = \
+/def map_query = \
     /result sqlite_rawQuery(map_mapFile, {*})
 
 /alias me /map_exits %{*}
@@ -214,7 +219,7 @@
         /return%;\
     /endif%;\
     /let _sql=$[strcat("SELECT ExitID, DirName, ToID, Param FROM ExitTbl JOIN DirTbl ON DirType = DirTbl.DirID-1 WHERE FromID = '",sqlite_escapeSql(util_getVar("map.currentRoom.id")),"';")]%;\
-    /let _r=$[map_rawQuery(_sql)]%;\
+    /let _r=$[map_query(_sql)]%;\
     /map_dumpExitList %{1} %{_r}
 
 /alias mo /map_open %{*}
@@ -226,7 +231,7 @@
     /endif%;\
     /test _sql := strcat(_sql, " LIMIT 1")%;\
 ;    /echo Query: %{_sql}%;\
-    /let _r=$[map_rawQuery(_sql)]%;\
+    /let _r=$[map_query(_sql)]%;\
 ;    /echo Result: %{_r}%;\
     /if (_r =~ '') \
         /if ({#}) \
@@ -243,7 +248,7 @@
     /let _lastDir=%{2}%;\
     /let _sql=$[strcat("SELECT [ToID] FROM ExitTbl JOIN DirTbl ON DirType = DirTbl.DirID-1 WHERE FromID = '", sqlite_escapeSql(_roomId), "' AND DirName LIKE '", _lastDir, "%';")]%;\
 ;    /echo SQL: %{_sql}%;\
-    /let _r=$[map_rawQuery(_sql)]%;\
+    /let _r=$[map_query(_sql)]%;\
 ;    /echo Result: %{_r}%;\
     /result _r
 
@@ -278,7 +283,7 @@
 /def map_findRoomNameById = \
     /let _id=$[sqlite_escapeSql({*})]%;\
     /let _sql=SELECT NAME FROM [ObjectTbl] WHERE [ObjID] = %{_id}%;\
-    /result map_rawQuery(_sql)
+    /result map_query(_sql)
 
 /alias zone /map_zone %{*}
 /def map_zone = \
@@ -287,7 +292,7 @@
         /test _room := {1}%;\
     /endif%;\
     /let _sql=SELECT ZoneTbl.Name FROM ObjectTbl JOIN ZoneTbl ON ObjectTbl.ZoneID = ZoneTbl.ZoneID WHERE ObjectTbl.ObjID = %{_room}%;\
-    /result map_rawQuery(_sql)
+    /result map_query(_sql)
 
 
 /util_addListener entered_room map_handleEnteredRoom
@@ -303,15 +308,14 @@
     /else \
         /map_path_repathIfNecessary%;\
     /endif%;\
-;Repeating this line because it may have changed.
+; Repeating this line because target room may have changed.
     /let _targetRoomId=$[getVar("map.path.target.roomId")]%;\
     /if (_targetRoomId) \
         /if (strlen(getVar("map.path.completeHandler")) > 0) \
             /test _targetRoomId := strcat(_targetRoomId, " -> ", getVar("map.path.completeHandler"))%;\
         /endif%;\
         /echo Target Room: <%{_targetRoomId}>%;\
-    /endif%;\
-    /test 1
+    /endif
 
 /def map_path_repathIfNecessary = \
     /let _len=$(/length $[getVar("map.moveQueue")])%;\
@@ -338,14 +342,13 @@
     /send %{*}
 
 /def map_queueMoveCmd = \
-    /test setVar("map.moveQueue", strcat(getVar("map.moveQueue"), " ", {1}))%;\
-;    /echo Move queue is now <$[getVar("map.moveQueue")]>%;\
-    /test 1
+    /test setVar("map.moveQueue", strcat(getVar("map.moveQueue"), " ", {1}))
 
 /util_addListener combat_detected map_queue_clear
 /def map_queue_clear = \
     /test setVar("map.moveQueue", "")
 
+; TODO: Move these to WoTMUD mapper helper
 /def -mregexp -t"^Your mount is too exhausted\.$" map_mountExhausted = \
     /map_queue_pop
 

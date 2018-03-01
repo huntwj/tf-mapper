@@ -59,7 +59,7 @@
             /test _rest := substr(_rest, _semiIdx + 1)%;\
         /endif%;\
         /if (_bit !~ "") \
-            /send -h %_bit%;\
+            /send -h %{_bit}%;\
         /endif%;\
     /done
 
@@ -256,7 +256,7 @@
         /endif%;\
     /done%;\
     /if (strlen(_path) > 0) \
-        /test _next := strcat(_next,{P2})%;\
+        /test _next := strcat(_next, {P2})%;\
     /endif%;\
     /result _next
 
@@ -279,7 +279,7 @@
 
 /def map_path_complete_handler = \
     /util_removeListener map_path_complete map_path_complete_handler%;\
-    /$[getVar("map.path.completeHandler")] $[getVar("map.path.target.roomId")]    
+    /$[getVar("map.path.completeHandler")] $[getVar("map.path.target.roomId")]
 
 /alias mark /map_markRoom %{*}
 /def map_markRoom = \
