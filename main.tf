@@ -5,6 +5,7 @@
 
 /require tf-sqlite/main.tf
 /require tf-mapper/pathing.tf
+/require tf-node-server/main.tf
 
 /set map_editMode 0
 
