@@ -30,6 +30,7 @@
 /def map_roomCaptured = \
     /let _name=%{1}%;\
     /let _desc=%{2}%;\
+    /node_sendMessage map roomCaptured $[textencode(_name)] $[textencode(_desc)]%;\
     /let _roomId=$[map_findRoomByName(_name)]%;\
     /if (strstr(_roomId, " ") != -1) \
         /test _roomId := map_findRoomByDesc(_desc, _roomId)%;\
