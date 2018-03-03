@@ -50,7 +50,7 @@
     /let _rest=%{*}%;\
     /while (_rest !~ "") \
         /let _semiIdx=%;\
-        /test _semiIdx := strstr(_rest,";")%;\
+        /test _semiIdx := strstr(_rest, ";")%;\
         /if ( _semiIdx == -1) \
             /test _bit := _rest%;\
             /test _rest := ""%;\
@@ -260,7 +260,9 @@
     /endif%;\
     /result _next
 
-/alias go /setVar map.path.retryCount 3 %; /map_go %{*}
+/alias go \
+    /setVar map.path.retryCount 3 %;\
+    /map_go %{*}
 
 /def map_go = \
     /if ({#} > 1) \
@@ -271,7 +273,10 @@
     /let _mapPath=$(/map_path %{*})%;\
     /return map_executePath(_mapPath)
 
-/alias go_and /setVar map.path.retryCount 3 %; /map_go_and %{*}
+/alias go_and \
+    /setVar map.path.retryCount 3 %;\
+    /map_go_and %{*}
+
 /def map_go_and = \
     /setVar map.path.completeHandler %{1}%;\
     /util_addListener map_path_complete map_path_complete_handler%;\
@@ -304,4 +309,3 @@
             /map_go %{_mark}%;\
         /endif%;\
     /endif
-

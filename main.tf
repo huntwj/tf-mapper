@@ -371,4 +371,3 @@
     /let _val=$(/car $[getVar("map.moveQueue")])%;\
     /setVar map.moveQueue $(/cdr $[getVar("map.moveQueue")])%;\
     /result _val
-
